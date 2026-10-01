@@ -44,26 +44,53 @@ function onEachFeature(feature, layer) {
   });
 
 
+  var pocos = L.geoJSON(pocos, {
+    onEachFeature: function (feature, layer) {
+    if (feature.properties) {
+      const p = feature.properties;
 
+      // Monta o conteúdo HTML do Popup com os dados da feição
+      const popupContent = `
+        <div style="font-family: sans-serif; font-size: 13px; line-height: 1.5;">
+          <h4 style="margin: 0 0 6px 0; color: #1e3a8a;">Poço #${p.fid}</h4>
+          <b>Município:</b> ${p.municipio}<br>
+          <b>Proprietário:</b> ${p.proprietario}<br>
+          <b>Órgão:</b> ${p.orgao}<br>
+          <b>Data de Perfuração:</b> ${p.data_perfuracao}<br>
+          <b>Profundidade:</b> ${p.profundidade} m<br>
+          <b>Vazão:</b> ${p.q_m3h} m³/h<br>
+          <b>Equipamento:</b> ${p.equipamento}<br>
+          <b>Região:</b> ${p.microregiao} (${p.mesoregiao})
+        </div>
+      `;
 
-
-  var map = L.map('map',
-  { center: [-6.920973, -37.823181],
-  zoom: 8,
-  layers: [acudes, osm]
+      layer.bindPopup(popupContent);
+  }
+}
 });
 
+//adicionar o cluster
+var pocosCluster = L.markerClusterGroup();
+pocosCluster.addLayer(pocos);
 
-  var baseMaps = {
+var map = L.map('map', {
+    center: [-7.171750, -36.798706],
+    zoom: 8,
+    layers: [acudes, osm]
+});
+
+var baseMaps = {
     "OpenStreetMap": osm,
-    "Google satélite  " : googleSat
-    
+    "Google Satélite": googleSat,
 };
 
-
-
+//adicionar a camada de cluster em overlaylayers
 var overlayMaps = {
-    "Açudes": acudes
+    "Açudes": acudes,
+    "Poços": pocosCluster,
 };
 
 var layerControl = L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+
+
