@@ -24,6 +24,17 @@ var googleHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={
 // 2. Column Rename Maps (Friendly Names)
 // ==========================
 var columnMaps = {
+  logradouros: {
+    'objectid_1': 'ID',
+    'nome_logr':  'Nome do Logradouro',
+    'tipo':       'Tipo',
+    'tipoabre':   'Abrev.',
+    'codlog':     'Cód.',
+    'cep':        'CEP',
+    'pavimentad': 'Pavimentado',
+    'tipopavim':  'Tipo de Pavimento',
+    'shape_Leng': 'Extensão (m)'
+  },
   acudes: {
     'OBJECTID':   'ID',
     'Nome':       'Nome do Açude',
@@ -73,6 +84,38 @@ var columnMaps = {
 // ==========================
 var canvasRenderer = L.canvas({ padding: 0.5 });
 
+function logradourosStyle(feature) {
+  var tipo = (feature && feature.properties && feature.properties.tipo) || '';
+  tipo = tipo.toUpperCase();
+  var color = '#ea580c';
+  var weight = 1.6;
+  var opacity = 0.75;
+
+  if (tipo.indexOf('RODOVIA') >= 0) {
+    color = '#dc2626'; // Vermelho para rodovias / BRs
+    weight = 3.0;
+    opacity = 0.9;
+  } else if (tipo.indexOf('AVENIDA') >= 0) {
+    color = '#ea580c'; // Laranja para avenidas principais
+    weight = 2.2;
+    opacity = 0.85;
+  } else if (tipo.indexOf('RUA') >= 0) {
+    color = '#d97706'; // Âmbar para ruas
+    weight = 1.4;
+    opacity = 0.7;
+  } else {
+    color = '#78716c'; // Cinza para travessas, vilas, passagens de pedestre
+    weight = 1.1;
+    opacity = 0.6;
+  }
+
+  return {
+    color: color,
+    weight: weight,
+    opacity: opacity
+  };
+}
+
 var acudesStyle = {
   color: '#0085e4',
   weight: 2,
@@ -115,6 +158,34 @@ function formatNumber(val) {
   var num = parseFloat(String(val).replace(',', '.'));
   if (isNaN(num)) return val;
   return num.toLocaleString('pt-BR');
+}
+
+function formatCep(val) {
+  if (val === null || val === undefined || val === '' || val === 0) return '—';
+  var num = parseInt(val, 10);
+  if (isNaN(num) || num === 0) return '—';
+  var str = String(num).padStart(8, '0');
+  return str.substring(0, 5) + '-' + str.substring(5);
+}
+
+function popupLogradouro(feature, layer) {
+  if (feature.properties) {
+    var p = feature.properties;
+    var nome = p.nome_logr || (p.tipo && p.nome ? (p.tipo + ' ' + p.nome) : 'Logradouro sem denominação');
+    var html = '<div style="font-family:Inter,sans-serif;font-size:13px;line-height:1.6">' +
+      '<h4 style="margin:0 0 6px;color:#ea580c;border-bottom:2px solid #e2e8f0;padding-bottom:4px">' +
+        '<i class="fas fa-road" style="margin-right:4px"></i>' + nome +
+      '</h4>' +
+      '<b>Tipo:</b> ' + (p.tipo || '—') + '<br>' +
+      '<b>CEP:</b> ' + formatCep(p.cep) + '<br>' +
+      '<b>Pavimentação:</b> ' + (p.pavimentad || '—') + '<br>' +
+      '<b>Tipo de Pavimento:</b> ' + (p.tipopavim || '—') + '<br>' +
+      '<b>Extensão:</b> ' + (p.shape_Leng ? (formatNumber(p.shape_Leng) + ' m') : '—') + '<br>' +
+      '<b>Código Logradouro:</b> ' + (p.codlog || '—') + '<br>' +
+      '<b>ID:</b> ' + (p.objectid_1 || '—') +
+      '</div>';
+    layer.bindPopup(html);
+  }
 }
 
 function popupAcude(feature, layer) {
@@ -192,6 +263,7 @@ function popupMunicipio(feature, layer) {
 // 5. Features Storage for Table
 // ==========================
 var layerFeatures = {
+  logradouros: [],
   acudes: [],
   pocos: [],
   rios: [],
@@ -204,11 +276,18 @@ function storeFeatureLayer(key, feature, layer) {
 }
 
 // ==========================
-// 6. Map Initialization
+// 6. Map Initialization (Foco na Região de João Pessoa)
 // ==========================
+var joaoPessoaCenter = [-7.146, -34.868];
+var joaoPessoaBounds = [[-7.2359, -34.9432], [-7.0562, -34.7936]];
+var regiaoJPBounds = [[-7.42, -35.25], [-6.88, -34.58]];
+
 var map = L.map('map', {
-  center: [-7.171750, -36.798706],
-  zoom: 8,
+  center: joaoPessoaCenter,
+  zoom: 12,
+  minZoom: 10,
+  maxBounds: regiaoJPBounds,
+  maxBoundsViscosity: 0.7,
   layers: [osm],
   zoomControl: true
 });
@@ -216,7 +295,37 @@ var map = L.map('map', {
 map.zoomControl.setPosition('topright');
 L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
 
+// Botão rápido para centralizar/focar em João Pessoa
+var FocusJPControl = L.Control.extend({
+  options: { position: 'topright' },
+  onAdd: function() {
+    var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+    var btn = L.DomUtil.create('a', '', container);
+    btn.href = '#';
+    btn.title = 'Focar em João Pessoa';
+    btn.role = 'button';
+    btn.setAttribute('aria-label', 'Focar em João Pessoa');
+    btn.innerHTML = '<i class="fas fa-crosshairs" style="line-height:36px;font-size:16px;color:#ea580c;"></i>';
+    L.DomEvent.disableClickPropagation(container);
+    L.DomEvent.on(btn, 'click', function(e) {
+      L.DomEvent.preventDefault(e);
+      map.fitBounds(joaoPessoaBounds, { padding: [25, 25], maxZoom: 13 });
+    });
+    return container;
+  }
+});
+map.addControl(new FocusJPControl());
+
 // Create GeoJSON layer holders with GPU Canvas renderer
+var logradourosLayer = L.geoJSON(null, {
+  style: logradourosStyle,
+  renderer: canvasRenderer,
+  onEachFeature: function(feature, layer) {
+    popupLogradouro(feature, layer);
+    storeFeatureLayer('logradouros', feature, layer);
+  }
+});
+
 var acudesLayer = L.geoJSON(null, {
   style: acudesStyle,
   renderer: canvasRenderer,
@@ -254,7 +363,7 @@ var riosLayer = L.geoJSON(null, {
 
 // Add default layers to map
 map.addLayer(municipiosLayer);
-map.addLayer(acudesLayer);
+map.addLayer(logradourosLayer);
 
 var baseMaps = {
   'OpenStreetMap': osm,
@@ -263,6 +372,7 @@ var baseMaps = {
 };
 
 var overlayMaps = {
+  '<i class="fas fa-road" style="color:#ea580c"></i> Logradouros (JP)': logradourosLayer,
   '<i class="fas fa-city" style="color:#6b21a8"></i> Municípios': municipiosLayer,
   '<i class="fas fa-water" style="color:#0085e4"></i> Açudes': acudesLayer,
   '<i class="fas fa-circle-dot" style="color:#ef4444"></i> Poços': pocosCluster,
@@ -318,6 +428,13 @@ function loadLayerData(layerObj, globalVarName, fetchUrls, onLoaded) {
 
   return tryFetch(0);
 }
+
+// Load Logradouros (João Pessoa)
+loadLayerData(logradourosLayer, 'logradouros', ['dados/logradouros.js', 'dados/logradouro_JP.geojson'], function() {
+  console.log('Camada de logradouros (JP) carregada com sucesso (' + (layerFeatures.logradouros ? layerFeatures.logradouros.length : 0) + ' feições).');
+  if (layerSelect.value === 'logradouros') populateTable('logradouros');
+  checkInitialLoading();
+});
 
 // Load Açudes
 loadLayerData(acudesLayer, 'acudes', ['dados/acudes.js', 'dados/acude_aesa.geojson'], function() {
@@ -520,6 +637,7 @@ function onRowClick(layerKey, index, rowElement) {
 
 function ensureLayerVisible(layerKey) {
   var overlayMap = {
+    'logradouros': logradourosLayer,
     'acudes': acudesLayer,
     'pocos': pocosCluster,
     'rios': riosLayer,
@@ -557,6 +675,8 @@ function clearHighlight() {
         selectedHighlight.setStyle(municipiosStyle);
       } else if (riosLayer.hasLayer(selectedHighlight)) {
         selectedHighlight.setStyle(riosStyle(selectedHighlight.feature));
+      } else if (logradourosLayer.hasLayer(selectedHighlight)) {
+        selectedHighlight.setStyle(logradourosStyle(selectedHighlight.feature));
       }
     } else if (selectedHighlight._icon) {
       L.DomUtil.removeClass(selectedHighlight._icon, 'leaflet-marker-highlight');
@@ -568,7 +688,7 @@ function clearHighlight() {
 // ==========================
 // 11. Initial Table Call
 // ==========================
-populateTable('acudes');
+populateTable('logradouros');
 
 // Fechar menu mobile ao clicar no mapa
 map.on('click', function() {
