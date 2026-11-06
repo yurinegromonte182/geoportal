@@ -3,20 +3,160 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Geoportal - Downloads</title>
+	<title>GeoPortal PB — Downloads</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 	<link rel="stylesheet" href="css/main.css">
+	<style>
+		body {
+			overflow-y: auto !important;
+			padding-top: calc(var(--nav-height) + 24px);
+			padding-bottom: 40px;
+			background: var(--bg);
+		}
+		.downloads-container {
+			max-width: 900px;
+			margin: 0 auto;
+			padding: 0 20px;
+		}
+		.downloads-header {
+			margin-bottom: 24px;
+		}
+		.downloads-header h1 {
+			font-size: 1.8rem;
+			color: var(--primary);
+			margin-bottom: 6px;
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+		.downloads-header p {
+			color: var(--text-muted);
+			font-size: 0.95rem;
+		}
+		.layer-card {
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			padding: 18px 20px;
+			margin-bottom: 14px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			box-shadow: var(--shadow);
+			transition: transform 0.2s, box-shadow 0.2s;
+		}
+		.layer-card:hover {
+			transform: translateY(-2px);
+			box-shadow: var(--shadow-lg);
+		}
+		.layer-info h3 {
+			font-size: 1.05rem;
+			color: var(--text);
+			margin-bottom: 4px;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+		.layer-info p {
+			font-size: 0.85rem;
+			color: var(--text-muted);
+		}
+		.btn-download {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			padding: 10px 18px;
+			border-radius: 6px;
+			background: var(--accent);
+			color: #fff;
+			text-decoration: none;
+			font-size: 0.9rem;
+			font-weight: 500;
+			white-space: nowrap;
+			transition: background 0.2s;
+		}
+		.btn-download:hover {
+			background: var(--primary-light);
+		}
+	</style>
 </head>
 <body>
 
-   <div id="navbar">
-	<a href="index.html">Início</a> || 
-	<a href="galeria.html">Galeria</a> ||
-	<a href="downloads.html">Downloads</a>
-   </div>
+	<!-- Navbar -->
+	<nav id="navbar">
+		<div class="nav-brand">
+			<i class="fas fa-globe-americas"></i>
+			<span>GeoPortal PB</span>
+		</div>
+		<div class="nav-links">
+			<a href="index.html"><i class="fas fa-map"></i> Início</a>
+			<a href="galeria.html"><i class="fas fa-images"></i> Galeria</a>
+			<a href="downloads.html" class="active"><i class="fas fa-download"></i> Downloads</a>
+		</div>
+	</nav>
 
-	<hr> 
+	<div class="downloads-container">
+		<div class="downloads-header">
+			<h1><i class="fas fa-download"></i> Camadas Geoespaciais para Download</h1>
+			<p>Baixe os arquivos vetoriais em formato GeoJSON para uso em SIG (QGIS, ArcGIS, Leaflet, etc.).</p>
+		</div>
 
-	<h1>Área de Downloads</h1>
-	
+		<!-- Logradouros JP -->
+		<div class="layer-card">
+			<div class="layer-info">
+				<h3><i class="fas fa-road" style="color:#ea580c"></i> Logradouros de João Pessoa</h3>
+				<p>Malha viária detalhada de João Pessoa (Ruas, Avenidas, Rodovias) — EPSG:4326 (WGS84)</p>
+			</div>
+			<a href="dados/logradouro_JP.geojson" download="logradouro_JP.geojson" class="btn-download">
+				<i class="fas fa-file-arrow-down"></i> GeoJSON
+			</a>
+		</div>
+
+		<!-- Municípios -->
+		<div class="layer-card">
+			<div class="layer-info">
+				<h3><i class="fas fa-city" style="color:#6b21a8"></i> Municípios da Paraíba (AESA)</h3>
+				<p>Limites dos 223 municípios do estado da Paraíba — EPSG:4326 (WGS84)</p>
+			</div>
+			<a href="dados/municipios_aesa.geojson" download="municipios_aesa.geojson" class="btn-download">
+				<i class="fas fa-file-arrow-down"></i> GeoJSON
+			</a>
+		</div>
+
+		<!-- Açudes -->
+		<div class="layer-card">
+			<div class="layer-info">
+				<h3><i class="fas fa-water" style="color:#0085e4"></i> Açudes e Reservatórios (AESA)</h3>
+				<p>Reservatórios monitorados na Paraíba — EPSG:4326 (WGS84)</p>
+			</div>
+			<a href="dados/acude_aesa.geojson" download="acude_aesa.geojson" class="btn-download">
+				<i class="fas fa-file-arrow-down"></i> GeoJSON
+			</a>
+		</div>
+
+		<!-- Poços -->
+		<div class="layer-card">
+			<div class="layer-info">
+				<h3><i class="fas fa-circle-dot" style="color:#ef4444"></i> Poços Tubulares da Paraíba</h3>
+				<p>Pontos de captação subterrânea e poços — EPSG:4326 (WGS84)</p>
+			</div>
+			<a href="dados/pocos_pb.geojson" download="pocos_pb.geojson" class="btn-download">
+				<i class="fas fa-file-arrow-down"></i> GeoJSON
+			</a>
+		</div>
+
+		<!-- Rios -->
+		<div class="layer-card">
+			<div class="layer-info">
+				<h3><i class="fas fa-water" style="color:#0284c7"></i> Rios e Drenagem (AESA)</h3>
+				<p>Cursos d'água e malha de drenagem fluvial — EPSG:4326 (WGS84)</p>
+			</div>
+			<a href="dados/rios_aesa.geojson.json" download="rios_aesa.geojson" class="btn-download">
+				<i class="fas fa-file-arrow-down"></i> GeoJSON
+			</a>
+		</div>
+	</div>
+
 </body>
-</html>	
+</html>
