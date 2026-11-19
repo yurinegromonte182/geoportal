@@ -276,22 +276,25 @@ function storeFeatureLayer(key, feature, layer) {
 }
 
 // ==========================
-// 6. Map Initialization (Foco na Região de João Pessoa)
+// 6. Map Initialization (Foco no Estado da Paraíba)
 // ==========================
-var joaoPessoaCenter = [-7.146, -34.868];
-var joaoPessoaBounds = [[-7.2359, -34.9432], [-7.0562, -34.7936]];
-var regiaoJPBounds = [[-7.42, -35.25], [-6.88, -34.58]];
+var paraibaCenter = [-7.15, -36.80];
+var paraibaBounds = [[-8.32, -38.80], [-6.02, -34.75]];
+var regiaoPBBounds = [[-9.00, -40.00], [-5.00, -33.50]];
 
 var map = L.map('map', {
-  center: joaoPessoaCenter,
-  zoom: 12,
-  minZoom: 10,
-  maxBounds: regiaoJPBounds,
+  center: paraibaCenter,
+  zoom: 8,
+  minZoom: 7,
+  maxBounds: regiaoPBBounds,
   maxBoundsViscosity: 0.7,
   layers: [osm],
   zoomControl: true
 });
 
+map.fitBounds(paraibaBounds, {
+  padding: [20, 20]
+});
 map.zoomControl.setPosition('topright');
 L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
 
